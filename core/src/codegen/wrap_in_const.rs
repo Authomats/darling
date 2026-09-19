@@ -17,14 +17,9 @@ use syn::spanned::Spanned;
 /// - `tokens`: The trait implementations to wrap inside of `const` block
 /// - `krate`: Path to the darling crate, which defaults to `darling`
 pub fn wrap_in_const<T: ToTokens>(tokens: &T, krate: Option<&syn::Path>) -> TokenStream {
-    // Check if user depends on hicore
-    let should_fake_original = match proc_macro_crate::crate_name("hicore") {
-        Err(_) | Ok(proc_macro_crate::FoundCrate::Itself) => true,
-        Ok(proc_macro_crate::FoundCrate::Name(name)) => {
-            debug_assert_eq!(&name, "hicore");
-            false
-        }
-    };
+    // Check if user depends on `hicore` or `hicore_micro`.
+    let should_fake_original = proc_macro_crate::crate_name("hicore").is_err()
+        && proc_macro_crate::crate_name("hicore_micro").is_err();
 
     let use_darling = if should_fake_original {
         krate.map_or_else(
