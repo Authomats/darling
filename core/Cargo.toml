@@ -22,6 +22,7 @@ quote = "1.0.18"
 serde = { version = "1.0.210", optional = true }
 syn = { version = "3.0.0", features = ["full", "extra-traits"] }
 strsim = { version = "0.11.1", optional = true }
+proc-macro-crate = { version = "2.0.2" }
 
 [dev-dependencies]
 serde_json = "1.0.140"

@@ -17,14 +17,18 @@ use syn::spanned::Spanned;
 /// - `tokens`: The trait implementations to wrap inside of `const` block
 /// - `krate`: Path to the darling crate, which defaults to `darling`
 pub fn wrap_in_const<T: ToTokens>(tokens: &T, krate: Option<&syn::Path>) -> TokenStream {
-    let use_darling = krate.map_or_else(
-        || {
-            // Modified
-            //quote! { use ::darling as _darling; }
-            quote! { use ::hicore::darling as _darling; }
-        },
-        |krate| quote_spanned! { krate.span() => use #krate as _darling; },
-    );
+    // Check if user depends on `hicore` or `hicore_micro`.
+    let should_fake_original = proc_macro_crate::crate_name("hicore").is_err()
+        && proc_macro_crate::crate_name("hicore_micro").is_err();
+
+    let use_darling = match (should_fake_original, krate) {
+        (true, None) => quote! { use ::darling as _darling; },
+        (true, Some(krate)) => quote_spanned! { krate.span() => use #krate as _darling; },
+        (false, None) => quote! { use ::hicore::darling as _darling; },
+        (false, Some(_)) => panic!(
+            "Cannot change path of modified darling imported via hicore, import it by yourself to do that!"
+        ),
+    };
 
     quote! {
         #[doc(hidden)]
